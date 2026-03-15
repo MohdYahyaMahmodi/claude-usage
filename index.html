@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claude 2x Usage Calculator</title>
+    <meta
+      name="description"
+      content="Check when you get 2x Claude usage during the March 2026 promotion based on your local timezone."
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/utc.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/timezone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/advancedFormat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tippy.js@6/dist/tippy-bundle.umd.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/tippy.js@6/animations/shift-away-subtle.css"
+    />
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              // Anthropic official palette
+              ivory: { dark: "#E5E4DF", med: "#F0F0EB", light: "#FAFAF7" },
+              slate: { dark: "#191919", med: "#262625", light: "#40403E" },
+              cloud: { dark: "#666663", med: "#91918D", light: "#BFBFBA" },
+              cloth: "#CC785C",
+              kraft: "#D4A27F",
+              manilla: "#EBDBBC",
+              focus: "#61AAF2",
+              error: "#BF4D43",
+              // Semantic
+              peak: { bg: "#FDF1EC", border: "#E8C4B3", tx: "#A8563A" },
+              boost: { bg: "#EBF2ED", border: "#C5DAC9", tx: "#3D7050" },
+            },
+            fontFamily: {
+              heading: ['"Source Serif 4"', "Georgia", "Cambria", "serif"],
+              body: [
+                '"Source Sans 3"',
+                "-apple-system",
+                "BlinkMacSystemFont",
+                "sans-serif",
+              ],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        background: #f0f0eb;
+        -webkit-font-smoothing: antialiased;
+      }
+      .hour-cell {
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.15s ease;
+        cursor: default;
+      }
+      .hour-cell:hover {
+        transform: scaleY(1.15);
+        z-index: 2;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+      }
+      select,
+      input[type="time"] {
+        appearance: none;
+      }
+      input[type="time"]::-webkit-calendar-picker-indicator {
+        filter: invert(0.35);
+        cursor: pointer;
+      }
+      .fade-up {
+        opacity: 0;
+        transform: translateY(10px);
+        animation: fadeUp 0.45s ease forwards;
+      }
+      @keyframes fadeUp {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .pulse {
+        animation: pulse 2.5s ease-in-out infinite;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.3;
+        }
+      }
+      .tippy-box[data-theme~="claude"] {
+        background: #262625;
+        color: #fafaf7;
+        font-size: 12px;
+        font-family: "Source Sans 3", sans-serif;
+        border-radius: 8px;
+        padding: 2px 6px;
+      }
+      .tippy-box[data-theme~="claude"] .tippy-arrow {
+        color: #262625;
+      }
+    </style>
+  </head>
+  <body class="font-body text-slate-dark min-h-screen">
+    <div class="max-w-2xl mx-auto px-5 py-10 md:py-16">
+      <!-- Header -->
+      <header class="text-center mb-10 fade-up">
+        <div
+          class="inline-flex items-center gap-2 text-cloth text-sm font-medium px-3.5 py-1.5 rounded-full mb-5"
+          style="background: rgba(204, 120, 92, 0.1)"
+        >
+          <i class="fa-solid fa-bolt text-xs"></i>
+          <span>March 13 to 27, 2026</span>
+        </div>
+        <h1
+          class="font-heading text-[2rem] md:text-[2.6rem] md:leading-tight tracking-tight mb-3"
+        >
+          Claude 2x Usage Calculator
+        </h1>
+        <p class="text-cloud-dark text-lg max-w-lg mx-auto leading-relaxed">
+          Find out exactly when you get double message limits, based on your
+          local timezone.
+        </p>
+      </header>
+
+      <!-- Live Status -->
+      <section class="mb-8 fade-up" style="animation-delay: 0.05s">
+        <div
+          id="status-card"
+          class="rounded-2xl p-5 md:p-6 transition-colors duration-300"
+        >
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <div
+                  id="status-dot"
+                  class="w-2.5 h-2.5 rounded-full pulse"
+                ></div>
+                <span id="status-label" class="text-sm font-semibold"></span>
+              </div>
+              <p
+                id="status-detail"
+                class="text-sm text-cloud-dark leading-relaxed"
+              ></p>
+            </div>
+            <div
+              id="status-badge"
+              class="text-3xl font-heading font-semibold flex-shrink-0"
+            ></div>
+          </div>
+          <div
+            class="mt-3 pt-3 flex items-center gap-2 text-xs text-cloud-dark"
+            style="border-top: 1px solid rgba(0, 0, 0, 0.06)"
+          >
+            <i class="fa-regular fa-clock"></i>
+            <span id="live-clock"></span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Timezone -->
+      <section class="mb-8 fade-up" style="animation-delay: 0.1s">
+        <div
+          class="bg-ivory-light border border-ivory-dark rounded-2xl p-5 md:p-6"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="font-heading text-xl flex items-center gap-2">
+              <i class="fa-solid fa-globe text-cloth text-base"></i>
+              Your Timezone
+            </h2>
+            <button
+              id="tz-edit-btn"
+              onclick="toggleTzEdit()"
+              class="text-xs text-cloth font-medium hover:underline cursor-pointer"
+            >
+              <i class="fa-solid fa-pen text-[10px] mr-1"></i>Change
+            </button>
+          </div>
+          <div id="tz-display">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p id="tz-name-display" class="font-medium text-slate-dark"></p>
+                <p id="tz-offset-display" class="text-sm text-cloud-dark"></p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs text-cloud-dark mb-0.5">
+                  Peak hours (1x) in your time
+                </p>
+                <p id="peak-local" class="font-semibold text-peak-tx"></p>
+              </div>
+            </div>
+          </div>
+          <div id="tz-edit" class="hidden">
+            <label class="block text-sm text-cloud-dark mb-1.5"
+              >Select your timezone</label
+            >
+            <select
+              id="tz-select"
+              onchange="applyTz()"
+              class="w-full bg-ivory-med border border-ivory-dark rounded-xl px-4 py-3 text-sm text-slate-dark focus:outline-none focus:ring-2 focus:ring-cloth/30 focus:border-cloth"
+            ></select>
+            <p class="text-xs text-cloud-med mt-2">
+              <i class="fa-solid fa-circle-info mr-1"></i>If auto-detection got
+              it wrong, pick your correct timezone above.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Your Local Schedule -->
+      <section class="mb-8 fade-up" style="animation-delay: 0.15s">
+        <div
+          class="bg-ivory-light border border-ivory-dark rounded-2xl p-5 md:p-6"
+        >
+          <h2 class="font-heading text-xl mb-5 flex items-center gap-2">
+            <i class="fa-regular fa-calendar text-cloth text-base"></i>
+            Your Local Schedule
+          </h2>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="bg-boost-bg rounded-xl p-4 border border-boost-border">
+              <div
+                class="text-boost-tx font-semibold flex items-center gap-2 mb-1 text-sm"
+              >
+                <i class="fa-solid fa-bolt"></i> 2x Usage (Off-Peak)
+              </div>
+              <p class="text-sm text-cloud-dark leading-relaxed">
+                All day on weekends, plus weekday hours outside the peak window
+                shown below.
+              </p>
+            </div>
+            <div class="bg-peak-bg rounded-xl p-4 border border-peak-border">
+              <div
+                class="text-peak-tx font-semibold flex items-center gap-2 mb-1 text-sm"
+              >
+                <i class="fa-solid fa-hourglass-half"></i> 1x Usage (Peak)
+              </div>
+              <p class="text-sm text-cloud-dark leading-relaxed">
+                Weekdays from
+                <strong id="peak-range-inline" class="text-slate-dark"></strong>
+                your time.
+              </p>
+            </div>
+          </div>
+
+          <!-- Weekday bar -->
+          <div class="mb-5">
+            <div class="flex items-center justify-between mb-2">
+              <span
+                class="text-xs font-semibold text-cloud-dark uppercase tracking-wider"
+                >Weekdays</span
+              >
+              <span class="text-[11px] text-cloud-med">Hover for details</span>
+            </div>
+            <div
+              id="weekday-bar"
+              class="flex rounded-xl overflow-hidden h-11 border border-ivory-dark"
+            ></div>
+            <div class="flex justify-between mt-1.5 px-0.5">
+              <span class="text-[10px] text-cloud-med">12 AM</span>
+              <span class="text-[10px] text-cloud-med">6 AM</span>
+              <span class="text-[10px] text-cloud-med">12 PM</span>
+              <span class="text-[10px] text-cloud-med">6 PM</span>
+              <span class="text-[10px] text-cloud-med">12 AM</span>
+            </div>
+          </div>
+
+          <!-- Weekend bar -->
+          <div class="mb-4">
+            <div class="flex items-center justify-between mb-2">
+              <span
+                class="text-xs font-semibold text-cloud-dark uppercase tracking-wider"
+                >Weekends</span
+              >
+              <span class="text-[11px] text-boost-tx font-medium"
+                ><i class="fa-solid fa-arrow-up text-[9px] mr-0.5"></i>2x all
+                day</span
+              >
+            </div>
+            <div
+              class="flex rounded-xl overflow-hidden h-11 border border-boost-border bg-boost-bg items-center justify-center"
+            >
+              <span class="text-xs font-semibold text-boost-tx"
+                >2x for all 24 hours</span
+              >
+            </div>
+          </div>
+
+          <div class="flex items-center gap-5 text-[11px] text-cloud-dark">
+            <div class="flex items-center gap-1.5">
+              <div
+                class="w-3 h-3 rounded bg-boost-bg border border-boost-border"
+              ></div>
+              2x off-peak
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div
+                class="w-3 h-3 rounded bg-peak-bg border border-peak-border"
+              ></div>
+              1x peak
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Check a Specific Time -->
+      <section class="mb-8 fade-up" style="animation-delay: 0.2s">
+        <div
+          class="bg-ivory-light border border-ivory-dark rounded-2xl p-5 md:p-6"
+        >
+          <h2 class="font-heading text-xl mb-1.5 flex items-center gap-2">
+            <i class="fa-regular fa-clock text-cloth text-base"></i>
+            Check a Specific Time
+          </h2>
+          <p class="text-sm text-cloud-dark mb-5">
+            Pick a day and time to see whether that session gets doubled.
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-4 mb-5">
+            <div class="flex-1">
+              <label class="block text-xs text-cloud-dark mb-1.5 ml-0.5"
+                >Day of the week</label
+              >
+              <div class="relative">
+                <select
+                  id="check-day"
+                  class="w-full bg-ivory-med border border-ivory-dark rounded-xl px-4 py-3 text-sm text-slate-dark focus:outline-none focus:ring-2 focus:ring-cloth/30 focus:border-cloth pr-10"
+                >
+                  <option value="1">Monday</option>
+                  <option value="2">Tuesday</option>
+                  <option value="3">Wednesday</option>
+                  <option value="4">Thursday</option>
+                  <option value="5">Friday</option>
+                  <option value="6">Saturday</option>
+                  <option value="0">Sunday</option>
+                </select>
+                <i
+                  class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-cloud-med pointer-events-none text-xs"
+                ></i>
+              </div>
+            </div>
+            <div class="flex-1">
+              <label class="block text-xs text-cloud-dark mb-1.5 ml-0.5"
+                >Time (your local time)</label
+              >
+              <input
+                type="time"
+                id="check-time"
+                value="14:00"
+                class="w-full bg-ivory-med border border-ivory-dark rounded-xl px-4 py-3 text-sm text-slate-dark focus:outline-none focus:ring-2 focus:ring-cloth/30 focus:border-cloth"
+              />
+            </div>
+          </div>
+
+          <button
+            onclick="checkTime()"
+            class="w-full bg-slate-dark text-ivory-light rounded-xl py-3 text-sm font-semibold hover:bg-slate-med active:bg-slate-light transition-colors cursor-pointer"
+          >
+            Check My Time
+          </button>
+
+          <div id="check-result" class="mt-5 hidden"></div>
+        </div>
+      </section>
+
+      <!-- Weekly Overview -->
+      <section class="mb-8 fade-up" style="animation-delay: 0.25s">
+        <div
+          class="bg-ivory-light border border-ivory-dark rounded-2xl p-5 md:p-6"
+        >
+          <h2 class="font-heading text-xl mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-table-cells text-cloth text-base"></i>
+            Weekly Overview
+          </h2>
+          <p class="text-sm text-cloud-dark mb-4">
+            Your full week at a glance. Each row is one day, each column is one
+            hour.
+          </p>
+          <div id="weekly-grid" class="space-y-2"></div>
+          <div class="mt-3 flex items-center gap-5 text-[11px] text-cloud-dark">
+            <div class="flex items-center gap-1.5">
+              <div
+                class="w-3 h-3 rounded bg-boost-bg border border-boost-border"
+              ></div>
+              2x off-peak
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div
+                class="w-3 h-3 rounded bg-peak-bg border border-peak-border"
+              ></div>
+              1x peak
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Explanation -->
+      <section class="mb-8 fade-up" style="animation-delay: 0.3s">
+        <div class="px-1 space-y-4">
+          <h2 class="font-heading text-xl">What does this actually mean?</h2>
+          <p class="text-cloud-dark leading-relaxed text-[15px]">
+            Claude has a
+            <strong class="text-slate-dark">rolling 5-hour usage window</strong
+            >. You can send a certain number of messages within any 5-hour
+            period before you hit a limit. During this promotion, that allowance
+            is
+            <strong class="text-slate-dark"
+              >doubled during off-peak hours</strong
+            >.
+          </p>
+          <p class="text-cloud-dark leading-relaxed text-[15px]">
+            Anthropic's servers see the most traffic during US and European
+            working hours, specifically
+            <strong class="text-slate-dark">8 AM to 2 PM Eastern</strong> (5 to
+            11 AM Pacific) on weekdays. Outside of that window and on weekends,
+            you get 2x.
+          </p>
+          <div
+            class="bg-ivory-light border border-ivory-dark rounded-xl p-4 space-y-2.5 text-[15px]"
+          >
+            <div class="flex gap-3 items-start">
+              <i class="fa-solid fa-check text-boost-tx mt-1 text-xs"></i>
+              <span class="text-cloud-dark"
+                >The bonus
+                <strong class="text-slate-dark">does not count</strong> against
+                your weekly usage cap. It is purely additive.</span
+              >
+            </div>
+            <div class="flex gap-3 items-start">
+              <i class="fa-solid fa-check text-boost-tx mt-1 text-xs"></i>
+              <span class="text-cloud-dark"
+                >Applied
+                <strong class="text-slate-dark">automatically</strong> to your
+                account. No opt-in or settings change needed.</span
+              >
+            </div>
+            <div class="flex gap-3 items-start">
+              <i class="fa-solid fa-check text-boost-tx mt-1 text-xs"></i>
+              <span class="text-cloud-dark"
+                >Available on
+                <strong class="text-slate-dark"
+                  >Free, Pro, Max, and Team</strong
+                >
+                plans. Enterprise plans are excluded.</span
+              >
+            </div>
+            <div class="flex gap-3 items-start">
+              <i class="fa-solid fa-check text-boost-tx mt-1 text-xs"></i>
+              <span class="text-cloud-dark"
+                >Works across
+                <strong class="text-slate-dark"
+                  >web, desktop, mobile, Claude Code, Cowork, Excel, and
+                  PowerPoint</strong
+                >.</span
+              >
+            </div>
+            <div class="flex gap-3 items-start">
+              <i class="fa-solid fa-check text-boost-tx mt-1 text-xs"></i>
+              <span class="text-cloud-dark"
+                >After March 27, limits return to normal. No billing changes and
+                nothing rolls over.</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Countdown -->
+      <section class="mb-10 fade-up" style="animation-delay: 0.35s">
+        <div
+          class="bg-ivory-light border border-ivory-dark rounded-2xl p-5 text-center"
+        >
+          <p
+            class="text-xs font-semibold text-cloud-dark uppercase tracking-wider mb-2"
+          >
+            Promotion ends in
+          </p>
+          <p
+            id="countdown"
+            class="text-2xl md:text-3xl font-heading font-semibold tracking-tight text-slate-dark"
+          ></p>
+          <p class="text-xs text-cloud-med mt-1.5">
+            March 27, 2026 at 11:59 PM Pacific Time
+          </p>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer
+        class="pt-6 pb-8 fade-up"
+        style="animation-delay: 0.4s; border-top: 1px solid #e5e4df"
+      >
+        <p
+          class="text-[11px] text-cloud-med text-center leading-relaxed max-w-md mx-auto"
+        >
+          This website is an independent community tool and is
+          <strong class="text-cloud-dark"
+            >not affiliated with, endorsed by, or sponsored by Anthropic,
+            PBC</strong
+          >. All information is sourced from Anthropic's
+          <a
+            href="https://support.claude.com/en/articles/14063676-claude-march-2026-usage-promotion"
+            target="_blank"
+            rel="noopener"
+            class="underline hover:text-slate-dark transition-colors"
+            >official support page</a
+          >.
+        </p>
+      </footer>
+    </div>
+
+    <script>
+      dayjs.extend(window.dayjs_plugin_utc);
+      dayjs.extend(window.dayjs_plugin_timezone);
+      dayjs.extend(window.dayjs_plugin_advancedFormat);
+
+      let userTz = dayjs.tz.guess();
+      const PT = "America/Los_Angeles";
+      const ET = "America/New_York";
+      const PEAK_START_ET = 8;
+      const PEAK_END_ET = 14;
+      const PROMO_START = dayjs.tz("2026-03-13 00:00", PT);
+      const PROMO_END = dayjs.tz("2026-03-27 23:59", PT);
+      const REF_DATES = { 1: 16, 2: 17, 3: 18, 4: 19, 5: 20, 6: 21, 0: 22 };
+
+      // ---- Timezone selector ----
+
+      function populateTzSelect() {
+        const sel = document.getElementById("tz-select");
+        let zones;
+        try {
+          zones = Intl.supportedValuesOf("timeZone");
+        } catch (e) {
+          zones = [
+            "Pacific/Honolulu",
+            "America/Anchorage",
+            "America/Los_Angeles",
+            "America/Denver",
+            "America/Chicago",
+            "America/New_York",
+            "America/Toronto",
+            "America/Sao_Paulo",
+            "Atlantic/Reykjavik",
+            "Europe/London",
+            "Europe/Paris",
+            "Europe/Berlin",
+            "Europe/Moscow",
+            "Africa/Cairo",
+            "Africa/Lagos",
+            "Africa/Johannesburg",
+            "Asia/Dubai",
+            "Asia/Kolkata",
+            "Asia/Bangkok",
+            "Asia/Singapore",
+            "Asia/Shanghai",
+            "Asia/Tokyo",
+            "Asia/Seoul",
+            "Australia/Sydney",
+            "Pacific/Auckland",
+            "UTC",
+          ];
+        }
+        zones.forEach((tz) => {
+          const opt = document.createElement("option");
+          opt.value = tz;
+          opt.textContent = tz.replace(/_/g, " ");
+          if (tz === userTz) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      }
+
+      function toggleTzEdit() {
+        const edit = document.getElementById("tz-edit");
+        const display = document.getElementById("tz-display");
+        const btn = document.getElementById("tz-edit-btn");
+        const showing = !edit.classList.contains("hidden");
+        edit.classList.toggle("hidden", showing);
+        display.classList.toggle("hidden", !showing);
+        btn.innerHTML = showing
+          ? '<i class="fa-solid fa-pen text-[10px] mr-1"></i>Change'
+          : '<i class="fa-solid fa-check text-[10px] mr-1"></i>Done';
+      }
+
+      function applyTz() {
+        userTz = document.getElementById("tz-select").value;
+        destroyTooltips();
+        renderAll();
+      }
+
+      // ---- Core logic ----
+
+      function isPeakLocal(localHour, dayOfWeek) {
+        const dateStr =
+          "2026-03-" +
+          REF_DATES[dayOfWeek] +
+          " " +
+          String(localHour).padStart(2, "0") +
+          ":00";
+        const localMoment = dayjs.tz(dateStr, userTz);
+        const etMoment = localMoment.tz(ET);
+        const etDay = etMoment.day();
+        if (etDay === 0 || etDay === 6) return false;
+        return (
+          etMoment.hour() >= PEAK_START_ET && etMoment.hour() < PEAK_END_ET
+        );
+      }
+
+      function getLocalPeakRange() {
+        return {
+          start: dayjs.tz("2026-03-16 08:00", ET).tz(userTz),
+          end: dayjs.tz("2026-03-16 14:00", ET).tz(userTz),
+        };
+      }
+
+      function fmtHour(h) {
+        h = ((h % 24) + 24) % 24;
+        if (h === 0) return "12 AM";
+        if (h === 12) return "12 PM";
+        return h > 12 ? h - 12 + " PM" : h + " AM";
+      }
+
+      function fmtHourMin(h, m) {
+        const suffix = h >= 12 ? "PM" : "AM";
+        const hr = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        return hr + ":" + String(m).padStart(2, "0") + " " + suffix;
+      }
+
+      // ---- Tooltips ----
+
+      let activeTippys = [];
+      function destroyTooltips() {
+        activeTippys.forEach((t) => t.destroy());
+        activeTippys = [];
+      }
+      function initTooltips() {
+        activeTippys = tippy("[data-tippy-content]", {
+          theme: "claude",
+          animation: "shift-away-subtle",
+          placement: "top",
+          allowHTML: true,
+        });
+      }
+
+      // ---- Renders ----
+
+      function renderTzInfo() {
+        const { start, end } = getLocalPeakRange();
+        const nowInTz = dayjs().tz(userTz);
+        document.getElementById("tz-name-display").textContent = userTz.replace(
+          /_/g,
+          " ",
+        );
+        document.getElementById("tz-offset-display").textContent =
+          "UTC" +
+          nowInTz.format("Z") +
+          "  ·  Right now: " +
+          nowInTz.format("h:mm A, ddd MMM D");
+        const rangeStr = start.format("h:mm A") + " to " + end.format("h:mm A");
+        document.getElementById("peak-local").textContent = rangeStr;
+        document.getElementById("peak-range-inline").textContent = rangeStr;
+      }
+
+      function renderWeekdayBar() {
+        const bar = document.getElementById("weekday-bar");
+        bar.innerHTML = "";
+        const nowLocal = dayjs().tz(userTz);
+        const currentHour = nowLocal.hour();
+        const isWeekday = nowLocal.day() >= 1 && nowLocal.day() <= 5;
+
+        for (let h = 0; h < 24; h++) {
+          const peak = isPeakLocal(h, 1);
+          const div = document.createElement("div");
+          div.className =
+            "hour-cell flex-1 relative " +
+            (peak ? "bg-peak-bg" : "bg-boost-bg");
+          if (h > 0) div.style.borderLeft = "1px solid rgba(0,0,0,0.05)";
+          div.setAttribute(
+            "data-tippy-content",
+            "<strong>" +
+              fmtHour(h) +
+              " to " +
+              fmtHour(h + 1) +
+              "</strong><br>" +
+              (peak ? "1x peak" : "2x off-peak"),
+          );
+
+          if (isWeekday && currentHour === h) {
+            const m = document.createElement("div");
+            m.className =
+              "absolute inset-0 ring-2 ring-inset ring-slate-dark/20 rounded-sm";
+            div.appendChild(m);
+          }
+          bar.appendChild(div);
+        }
+        initTooltips();
+      }
+
+      function renderWeeklyGrid() {
+        const grid = document.getElementById("weekly-grid");
+        grid.innerHTML = "";
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const dayNums = [1, 2, 3, 4, 5, 6, 0];
+        const nowLocal = dayjs().tz(userTz);
+        const todayDow = nowLocal.day();
+
+        days.forEach((name, i) => {
+          const dayNum = dayNums[i];
+          const isWeekend = dayNum === 0 || dayNum === 6;
+          const isToday = dayNum === todayDow;
+
+          const row = document.createElement("div");
+          row.className = "flex items-center gap-2";
+
+          const label = document.createElement("span");
+          label.className =
+            "text-[11px] w-8 text-right flex-shrink-0 font-medium " +
+            (isToday ? "text-cloth" : "text-cloud-dark");
+          label.textContent = name;
+          row.appendChild(label);
+
+          const barWrap = document.createElement("div");
+          barWrap.className =
+            "flex flex-1 rounded-lg overflow-hidden h-6 border " +
+            (isToday ? "border-cloth/40" : "border-ivory-dark/60");
+
+          for (let h = 0; h < 24; h++) {
+            const peak = isWeekend ? false : isPeakLocal(h, dayNum);
+            const cell = document.createElement("div");
+            cell.className = "flex-1 " + (peak ? "bg-peak-bg" : "bg-boost-bg");
+            if (h > 0) cell.style.borderLeft = "1px solid rgba(0,0,0,0.03)";
+            barWrap.appendChild(cell);
+          }
+
+          // Current time indicator for today
+          if (isToday) {
+            barWrap.style.position = "relative";
+            const pct =
+              ((nowLocal.hour() * 60 + nowLocal.minute()) / 1440) * 100;
+            const indicator = document.createElement("div");
+            indicator.style.cssText =
+              "position:absolute;top:0;bottom:0;width:2px;background:#CC785C;left:" +
+              pct +
+              "%;z-index:2;border-radius:1px;";
+            barWrap.appendChild(indicator);
+          }
+
+          row.appendChild(barWrap);
+          grid.appendChild(row);
+        });
+
+        const labelsRow = document.createElement("div");
+        labelsRow.className = "flex items-center gap-2";
+        labelsRow.innerHTML =
+          '<span class="w-8 flex-shrink-0"></span><div class="flex flex-1 justify-between px-0.5"><span class="text-[9px] text-cloud-med">12a</span><span class="text-[9px] text-cloud-med">6a</span><span class="text-[9px] text-cloud-med">12p</span><span class="text-[9px] text-cloud-med">6p</span><span class="text-[9px] text-cloud-med">12a</span></div>';
+        grid.appendChild(labelsRow);
+      }
+
+      function renderLiveStatus() {
+        const now = dayjs();
+        const nowLocal = now.tz(userTz);
+        const nowET = now.tz(ET);
+
+        const dot = document.getElementById("status-dot");
+        const label = document.getElementById("status-label");
+        const detail = document.getElementById("status-detail");
+        const badge = document.getElementById("status-badge");
+        const card = document.getElementById("status-card");
+        const clock = document.getElementById("live-clock");
+
+        clock.textContent =
+          nowLocal.format("dddd, MMMM D, YYYY · h:mm:ss A") +
+          "  (" +
+          userTz.replace(/_/g, " ") +
+          ")";
+
+        if (now.isAfter(PROMO_END)) {
+          dot.className = "w-2.5 h-2.5 rounded-full bg-cloud-med";
+          label.textContent = "Promotion has ended";
+          detail.textContent =
+            "Usage limits returned to normal on March 27, 2026.";
+          badge.textContent = "";
+          card.className =
+            "rounded-2xl border border-ivory-dark p-5 md:p-6 bg-ivory-med transition-colors duration-300";
+          return;
+        }
+        if (now.isBefore(PROMO_START)) {
+          dot.className = "w-2.5 h-2.5 rounded-full bg-cloth pulse";
+          label.textContent = "Starts March 13";
+          detail.textContent = "The 2x usage promotion has not started yet.";
+          badge.textContent = "";
+          card.className =
+            "rounded-2xl border border-ivory-dark p-5 md:p-6 bg-ivory-med transition-colors duration-300";
+          return;
+        }
+
+        const etDay = nowET.day();
+        const etHour = nowET.hour();
+        const isWeekendET = etDay === 0 || etDay === 6;
+        const isPeak =
+          !isWeekendET && etHour >= PEAK_START_ET && etHour < PEAK_END_ET;
+
+        if (isPeak) {
+          const minsLeft = PEAK_END_ET * 60 - (etHour * 60 + nowET.minute());
+          const hLeft = Math.floor(minsLeft / 60);
+          const mLeft = minsLeft % 60;
+          const { end } = getLocalPeakRange();
+
+          dot.className = "w-2.5 h-2.5 rounded-full bg-peak-tx pulse";
+          label.textContent = "Peak hours right now";
+          detail.textContent =
+            "Standard limits. 2x kicks in at " +
+            end.format("h:mm A") +
+            " your time (" +
+            hLeft +
+            "h " +
+            mLeft +
+            "m remaining).";
+          badge.textContent = "1x";
+          badge.className =
+            "text-3xl font-heading font-semibold flex-shrink-0 text-peak-tx";
+          card.className =
+            "rounded-2xl border border-peak-border p-5 md:p-6 bg-peak-bg/60 transition-colors duration-300";
+        } else {
+          dot.className = "w-2.5 h-2.5 rounded-full bg-boost-tx pulse";
+          if (isWeekendET) {
+            label.textContent = "Weekend: double usage all day";
+            detail.textContent =
+              "2x is active around the clock until Monday morning.";
+          } else {
+            const { start } = getLocalPeakRange();
+            label.textContent = "Off-peak: double usage active";
+            detail.textContent =
+              "You have 2x right now. Peak starts at " +
+              start.format("h:mm A") +
+              " your time.";
+          }
+          badge.textContent = "2x";
+          badge.className =
+            "text-3xl font-heading font-semibold flex-shrink-0 text-boost-tx";
+          card.className =
+            "rounded-2xl border border-boost-border p-5 md:p-6 bg-boost-bg/60 transition-colors duration-300";
+        }
+      }
+
+      function checkTime() {
+        const dayVal = parseInt(document.getElementById("check-day").value);
+        const timeVal = document.getElementById("check-time").value;
+        if (!timeVal) return;
+        const [h, m] = timeVal.split(":").map(Number);
+
+        const dateStr =
+          "2026-03-" +
+          REF_DATES[dayVal] +
+          " " +
+          String(h).padStart(2, "0") +
+          ":" +
+          String(m).padStart(2, "0");
+        const testLocal = dayjs.tz(dateStr, userTz);
+        const testET = testLocal.tz(ET);
+        const testPT = testLocal.tz(PT);
+        const etH = testET.hour();
+        const etDay = testET.day();
+        const etIsWeekend = etDay === 0 || etDay === 6;
+        const isPeak =
+          !etIsWeekend && etH >= PEAK_START_ET && etH < PEAK_END_ET;
+
+        const dayNames = [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
+        const timeStr = fmtHourMin(h, m);
+        const etStr = testET.format("h:mm A");
+        const ptStr = testPT.format("h:mm A");
+
+        const result = document.getElementById("check-result");
+        result.classList.remove("hidden");
+
+        if (!isPeak) {
+          const reason = etIsWeekend
+            ? "This lands on a weekend in Eastern Time, so 2x applies all day."
+            : "This is outside the peak window (8 AM to 2 PM Eastern).";
+          result.innerHTML =
+            '<div class="rounded-xl bg-boost-bg border border-boost-border p-5">' +
+            '<div class="flex items-center gap-2 mb-1.5">' +
+            '<i class="fa-solid fa-bolt text-boost-tx"></i>' +
+            '<span class="font-semibold text-boost-tx">2x: You get doubled</span>' +
+            "</div>" +
+            '<p class="text-sm text-cloud-dark">' +
+            dayNames[dayVal] +
+            " at " +
+            timeStr +
+            ' converts to <strong class="text-slate-dark">' +
+            etStr +
+            " ET / " +
+            ptStr +
+            " PT</strong>. " +
+            reason +
+            " Bonus messages will not count against your weekly cap.</p>" +
+            "</div>";
+        } else {
+          const { end } = getLocalPeakRange();
+          result.innerHTML =
+            '<div class="rounded-xl bg-peak-bg border border-peak-border p-5">' +
+            '<div class="flex items-center gap-2 mb-1.5">' +
+            '<i class="fa-solid fa-hourglass-half text-peak-tx"></i>' +
+            '<span class="font-semibold text-peak-tx">1x: Standard limits</span>' +
+            "</div>" +
+            '<p class="text-sm text-cloud-dark">' +
+            dayNames[dayVal] +
+            " at " +
+            timeStr +
+            ' converts to <strong class="text-slate-dark">' +
+            etStr +
+            " ET / " +
+            ptStr +
+            ' PT</strong>. This falls within peak hours (8 AM to 2 PM Eastern). Try after <strong class="text-slate-dark">' +
+            end.format("h:mm A") +
+            "</strong> your time for 2x.</p>" +
+            "</div>";
+        }
+      }
+
+      function renderCountdown() {
+        const diff = PROMO_END.diff(dayjs(), "second");
+        const el = document.getElementById("countdown");
+        if (diff <= 0) {
+          el.textContent = "Promotion has ended";
+          return;
+        }
+        const d = Math.floor(diff / 86400);
+        const h = Math.floor((diff % 86400) / 3600);
+        const m = Math.floor((diff % 3600) / 60);
+        const s = diff % 60;
+        el.textContent =
+          d +
+          "d " +
+          String(h).padStart(2, "0") +
+          "h " +
+          String(m).padStart(2, "0") +
+          "m " +
+          String(s).padStart(2, "0") +
+          "s";
+      }
+
+      // ---- Init ----
+
+      function renderAll() {
+        renderTzInfo();
+        renderWeekdayBar();
+        renderWeeklyGrid();
+        renderLiveStatus();
+        renderCountdown();
+      }
+
+      populateTzSelect();
+      renderAll();
+      document.getElementById("check-day").value = dayjs().tz(userTz).day();
+      setInterval(() => {
+        renderLiveStatus();
+        renderCountdown();
+      }, 1000);
+      setInterval(() => {
+        renderTzInfo();
+        renderWeeklyGrid();
+      }, 60000);
+    </script>
+  </body>
+</html>
